@@ -86,6 +86,9 @@ class InferenceArgs:
     # Prompts sampled on every --asset, one test case each (for
     # --motion_expand: the segments of one chain per asset).
     prompt: Tuple[str, ...] = ()
+    # Torch device ('cuda', 'cuda:1', 'cpu', ...). Default: the saved
+    # config's sampling.device, falling back to CPU when CUDA is unavailable.
+    device: Optional[str] = None
     # Per-chunk inference batch size — caps GPU memory regardless of total count.
     batch_size: int = 64
     # Skip mp4/PNG renders; write only the .npy motion features.
@@ -1293,7 +1296,11 @@ def main(args: InferenceArgs):
         set_seed(args.seed)
         logger.info(f"Set random seed to [{args.seed}]")
 
-    device = torch.device(config.sampling.device)
+    device = torch.device(args.device or config.sampling.device)
+    if args.device is None and device.type == 'cuda' and not torch.cuda.is_available():
+        logger.warning(f"config.sampling.device is {config.sampling.device!r} but CUDA "
+                       f"is unavailable; sampling on CPU (override with --device).")
+        device = torch.device('cpu')
     stats_path = _resolve_stats_path(args.exp_dir)
     # Test cases are encoded before the diffusion model moves to the device,
     # so the text encoder and the model don't coexist on the GPU.

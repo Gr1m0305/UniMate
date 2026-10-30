@@ -255,7 +255,10 @@ def _unused_path(path):
 def _display_path(path):
     """*path* relative to the working directory when it lies below it (as the
     other summary paths are), else absolute."""
-    rel = os.path.relpath(path)
+    try:
+        rel = os.path.relpath(path)
+    except ValueError:      # Windows: on another drive than the working directory
+        return path
     return path if rel == os.pardir or rel.startswith(os.pardir + os.sep) else rel
 
 

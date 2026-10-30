@@ -216,6 +216,9 @@ def main(argv=None):
     if not jobs:
         print(f"error: no motions to drive in {manifest_path(args.path)}", file=sys.stderr)
         return 1
+    # LF even on Windows: bash reads the jobs with `read -r`, which would keep
+    # a CR in the last field (dataset_type).
+    sys.stdout.reconfigure(newline='\n')
     for job in jobs:
         print('\t'.join(job))
     return 0

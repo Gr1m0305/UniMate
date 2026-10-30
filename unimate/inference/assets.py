@@ -99,7 +99,10 @@ def _display_path(path: str) -> str:
     """*path* relative to the working directory when it lies under it (runs
     start from the repo root), else absolute."""
     absolute = os.path.abspath(path)
-    rel = os.path.relpath(absolute)
+    try:
+        rel = os.path.relpath(absolute)
+    except ValueError:      # Windows: on another drive than the working directory
+        return absolute
     return absolute if rel.startswith('..') else rel
 
 
